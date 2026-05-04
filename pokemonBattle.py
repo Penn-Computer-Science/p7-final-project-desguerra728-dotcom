@@ -7,7 +7,7 @@ root.title("Pokemon Battle")
 WIDTH = 1920
 HEIGHT = 1080
 img_dict = {}
-pokemon_list = []
+p_item_list = []
 background_list = []
 option_count = []
 next = False
@@ -19,6 +19,19 @@ fight = False
 run = False
 bag = False
 choice = []
+player_pokemon = []
+
+move_dict = {"Growl": [40, None], "ThunderShock": [30, 40], "Tail Whip": [30, None], "Thunder Wave": [20, None]}
+# move name: [pp, power]
+move_item_list = []
+
+pokemon_dict = {"pikachu": [35, 
+                            [35, 55, 40, 50, 50, 90], 
+                            [move_dict["Growl"], 
+                             move_dict["ThunderShock"], 
+                             move_dict["Tail Whip"], 
+                             move_dict["Thunder Wave"]]]}
+# name: hp, [stats], [moveset]
 
 canvas = tk.Canvas(root, width = WIDTH, height = HEIGHT, bg = "white")
 canvas.pack()
@@ -32,7 +45,7 @@ def make_img(sprite_name, img_file, zoom):
 def spawn_sprite(sprite_name, img_file, zoom, x, y):
     make_img(sprite_name, img_file, zoom)
     p = canvas.create_image(x, y, image = img_dict[sprite_name], anchor = "sw")
-    pokemon_list.append(p)
+    p_item_list.append(p)
 
 def place_img(img_name, img_file, zoom, x, y):
     make_img(img_name, img_file, zoom)
@@ -40,7 +53,8 @@ def place_img(img_name, img_file, zoom, x, y):
     background_list.append(bg)
 
 def choose4(img_name, index, file0, file1, file2, file3):
-    global next, choice, x, y
+    #file0: 00, file1: 01, file2: 10, file3: 11
+    global choice, x, y
     b = background_list[index]
     if x==0:
         if y==0:
@@ -58,12 +72,13 @@ def choose4(img_name, index, file0, file1, file2, file3):
 
 def gameloop():
     global next, pokemon, fight, run, bag, choice
-    if not next:
+    if not (next or (pokemon or fight or run or bag)):
         choose4("options", 1, "spriteImages\Options\pokeOptions.png",
                 "spriteImages\Options\FightOptions.png",
                 "spriteImages\Options\RunOptions.png",
                 "spriteImages\Options\BagOptions.png")
-    if next:
+        
+    if next and not (pokemon or fight or run or bag):
         x = choice[0]
         y = choice[1]
         if x==0:
@@ -84,9 +99,48 @@ def gameloop():
     if pokemon:
         pass
 
-    if fight:
-        pass
-    
+
+    if fight and next:
+        global dialogue, player_pokemon, move_item_list
+        # name: hp, [stats], [moveset]
+        player_pokemon = pokemon_dict["pikachu"]
+        canvas.delete(dialogue)
+        place_img("move options", "spriteImages\MoveOptions\m01.png", 1, 0, HEIGHT)
+        #file0: 00, file1: 01, file2: 10, file3: 11
+        move_item_list.append(canvas.create_text(300, HEIGHT-210, text="Growl", fill = "#252527", font=("Arial", 40)))
+        move_item_list.append(canvas.create_text(950, HEIGHT-210, text="ThunderShock", fill = "#252527", font=("Arial", 40)))
+        move_item_list.append(canvas.create_text(300, HEIGHT-100, text="Tail Whip", fill = "#252527", font=("Arial", 40)))
+        move_item_list.append(canvas.create_text(950, HEIGHT-100, text="Thunder Wave", fill = "#252527", font=("Arial", 40)))
+
+        choose4("move options", 1, "spriteImages\MoveOptions\m00.png",
+                "spriteImages\MoveOptions\m01.png",
+                "spriteImages\MoveOptions\m10.png",
+                "spriteImages\MoveOptions\m11.png")
+
+    if fight and not next:
+        canvas.delete(move_item_list[0])
+        canvas.delete(move_item_list[1])
+        canvas.delete(move_item_list[2])
+        canvas.delete(move_item_list[3])
+        mx = choice[0]
+        my = choice[1]
+        if mx==0:
+            if my==0:
+                move0 = True
+                move1 = move2 = move3 = False
+            else:
+                move1 = True
+                move2 = move3 = move0 = False
+        else:
+            if my==0:
+                move2 = True
+                move1 = move3 = move0 = False
+            else:
+                move3 = True
+                move0 = move1 = move2 = False
+        
+        
+
     if run:
         pass
     if bag:
@@ -112,7 +166,7 @@ def up_down(event):
 
 def enter(event):
     global next
-    next = True
+    next = not next
 
 root.bind("<Left>", right_left)
 root.bind("<Right>", right_left)
@@ -124,7 +178,7 @@ spawn_sprite("pikachu", "spriteImages\pokemon\pika.png", 1, -100, HEIGHT-200)
 spawn_sprite("pikachu2", "spriteImages\pokemon\pikafront.png", 2, 1300, 400)
 place_img("dialogue bar", "spriteImages\dialogueBar.png", 1, 0, HEIGHT)
 place_img("options", "spriteImages/Options/options.png", 1, 0, HEIGHT)
-canvas.create_text(400, HEIGHT-200, text="What will pikachu do?", fill = "#ffffff", font=("Arial", 40))
+dialogue = canvas.create_text(400, HEIGHT-200, text="What will pikachu do?", fill = "#ffffff", font=("Arial", 40))
 
 print(img_dict)
 gameloop()
