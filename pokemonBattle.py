@@ -21,20 +21,34 @@ bag = False
 choice = []
 player_pokemon = []
 
-move_dict = {"Growl": [40, None], "ThunderShock": [30, 40], "Tail Whip": [30, None], "Thunder Wave": [20, None]}
-# move name: [pp, power]
-move_item_list = []
+stage = "start"
 
-pokemon_dict = {"pikachu": [35, 
-                            [35, 55, 40, 50, 50, 90], 
-                            [move_dict["Growl"], 
-                             move_dict["ThunderShock"], 
-                             move_dict["Tail Whip"], 
-                             move_dict["Thunder Wave"]]]}
-# name: hp, [stats], [moveset]
+
+class Pokemon:
+    def __init__(self, name, stats, moveset):
+        self.name = name
+        self.stats = stats
+        self.moveset = moveset
+
+class Moves:
+    def __init__(self, name, pp, effect, power):
+        self.name =  name
+        self.pp = pp
+        self.effect = effect
+        self.power = power
+
+growl = Moves("Growl", 40, "neg att", 0)
+thundershock = Moves("Thundershock", 30, None, 40)
+tail_whip = Moves("Tail Whip", 30, "neg def", 0)
+thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0)
+pikachu_moveset = [growl, thundershock, thunder_wave, tail_whip]
+
+pikachu = Pokemon("Pikachu", [35, 55, 40, 50, 50, 90], pikachu_moveset)
 
 canvas = tk.Canvas(root, width = WIDTH, height = HEIGHT, bg = "white")
 canvas.pack()
+
+move_item_list = []
 
 def make_img(sprite_name, img_file, zoom):
     global img_dict
@@ -69,81 +83,79 @@ def choose4(img_name, index, file0, file1, file2, file3):
     canvas.itemconfig(b, image = img_dict[img_name])
     choice = [x, y]
 
-
 def gameloop():
-    global next, pokemon, fight, run, bag, choice
-    if not (next or (pokemon or fight or run or bag)):
+    global next, choice, stage, move_item_list
+    if stage == "start" and not next:
         choose4("options", 1, "spriteImages\Options\pokeOptions.png",
                 "spriteImages\Options\FightOptions.png",
                 "spriteImages\Options\RunOptions.png",
                 "spriteImages\Options\BagOptions.png")
         
-    if next and not (pokemon or fight or run or bag):
+    if next and stage == "start":
         x = choice[0]
         y = choice[1]
         if x==0:
             if y==0:
-                pokemon = True
-                fight = run = bag = False
+                stage = "pokemon"
             else:
-                fight = True
-                pokemon = run = bag = False
+                stage = "fight"
         else:
             if y==0:
-                run = True
-                pokemon = fight = bag = False
+                stage = "run"
             else:
-                bag = True
-                pokemon = run = fight = False
+                stage = "bag"
+
+        next = False
     
-    if pokemon:
+    if stage == "pokemon":
         pass
 
-
-    if fight and next:
+    if stage == "fight" and not next:
         global dialogue, player_pokemon, move_item_list
         # name: hp, [stats], [moveset]
-        player_pokemon = pokemon_dict["pikachu"]
         canvas.delete(dialogue)
         place_img("move options", "spriteImages\MoveOptions\m01.png", 1, 0, HEIGHT)
         #file0: 00, file1: 01, file2: 10, file3: 11
-        move_item_list.append(canvas.create_text(300, HEIGHT-210, text="Growl", fill = "#252527", font=("Arial", 40)))
-        move_item_list.append(canvas.create_text(950, HEIGHT-210, text="ThunderShock", fill = "#252527", font=("Arial", 40)))
-        move_item_list.append(canvas.create_text(300, HEIGHT-100, text="Tail Whip", fill = "#252527", font=("Arial", 40)))
-        move_item_list.append(canvas.create_text(950, HEIGHT-100, text="Thunder Wave", fill = "#252527", font=("Arial", 40)))
+
+        a=0
+        for i in range(3):
+            if i<2:
+                move_item_list.append(canvas.create_text(300+a, HEIGHT-210, text=pikachu.moveset[i].name, fill = "#252527", font=("Arial", 40)))
+                a=650
+            else:
+                move_item_list.append(canvas.create_text(300+a, HEIGHT-100, text=pikachu.moveset[i].name, fill = "#252527", font=("Arial", 40)))
+                move_item_list.append(canvas.create_text(300, HEIGHT-100, text=pikachu.moveset[i+1].name, fill = "#252527", font=("Arial", 40)))
 
         choose4("move options", 1, "spriteImages\MoveOptions\m00.png",
                 "spriteImages\MoveOptions\m01.png",
                 "spriteImages\MoveOptions\m10.png",
                 "spriteImages\MoveOptions\m11.png")
 
-    if fight and not next:
-        canvas.delete(move_item_list[0])
-        canvas.delete(move_item_list[1])
-        canvas.delete(move_item_list[2])
-        canvas.delete(move_item_list[3])
-        mx = choice[0]
-        my = choice[1]
-        if mx==0:
-            if my==0:
-                move0 = True
-                move1 = move2 = move3 = False
+    if stage == "fight" and next:
+        for item in move_item_list:
+            canvas.delete(item)
+            move_item_list.remove(item)
+        canvas.delete(background_list[1])
+        x = choice[0]
+        y = choice[1]
+        if x==0:
+            if y==0:
+                move_choice = "move0"
             else:
-                move1 = True
-                move2 = move3 = move0 = False
+                move_choice = "move1"
         else:
-            if my==0:
-                move2 = True
-                move1 = move3 = move0 = False
+            if y==0:
+                move_choice = "move2"
             else:
-                move3 = True
-                move0 = move1 = move2 = False
-        
-        
+                move_choice = "move3"
+        # next = False
 
-    if run:
+        
+    
+
+    if stage == "run":
         pass
-    if bag:
+    if stage =="bag":
         pass
 
     root.after(10, gameloop)
@@ -166,7 +178,7 @@ def up_down(event):
 
 def enter(event):
     global next
-    next = not next
+    next = True
 
 root.bind("<Left>", right_left)
 root.bind("<Right>", right_left)
