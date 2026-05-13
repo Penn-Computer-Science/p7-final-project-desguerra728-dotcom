@@ -29,6 +29,8 @@ class Pokemon:
         self.name = name
         self.stats = stats
         self.moveset = moveset
+    
+
 
 class Moves:
     def __init__(self, name, pp, effect, power):
@@ -148,7 +150,7 @@ def gameloop():
                 move_choice = "move2"
             else:
                 move_choice = "move3"
-        # next = False
+        next = False
 
         
     
