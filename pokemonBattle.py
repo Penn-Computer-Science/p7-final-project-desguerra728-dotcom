@@ -23,21 +23,34 @@ player_pokemon = []
 
 stage = "start"
 
-
-class Pokemon:
-    def __init__(self, name, stats, moveset):
-        self.name = name
-        self.stats = stats
-        self.moveset = moveset
-    
-
-
 class Moves:
     def __init__(self, name, pp, effect, power):
         self.name =  name
         self.pp = pp
         self.effect = effect
         self.power = power
+
+class Pokemon:
+    def __init__(self, name, stats, moveset):
+        self.name = name
+        self.stats = stats
+        self.moveset = moveset
+
+    def use_move(self, opponent, move):
+        move.pp -= 1
+
+        # damage = ((((2*level*critical)/5)*power*a/d)/50+2)*STAB*type1*type2*rand
+        rand=random.randint(217,255)
+        d=opponent.stats[2]
+        a=self.stats[1]
+        power=move.power
+
+        damage = ((((2)/5)*power*a/d)/50+2)*rand/225
+
+        print(opponent.stats[0])
+        opponent.stats[0] -= damage
+        print(opponent.stats[0])
+
 
 growl = Moves("Growl", 40, "neg att", 0)
 thundershock = Moves("Thundershock", 30, None, 40)
@@ -46,6 +59,8 @@ thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0)
 pikachu_moveset = [growl, thundershock, thunder_wave, tail_whip]
 
 pikachu = Pokemon("Pikachu", [35, 55, 40, 50, 50, 90], pikachu_moveset)
+pikachu2 = Pokemon("Pikachu2", [35, 55, 40, 50, 50, 90], pikachu_moveset)
+# stats: hp attk def spattk, spdef, speed
 
 canvas = tk.Canvas(root, width = WIDTH, height = HEIGHT, bg = "white")
 canvas.pack()
@@ -115,7 +130,8 @@ def gameloop():
     if stage == "fight" and not next:
         global dialogue, player_pokemon, move_item_list
         # name: hp, [stats], [moveset]
-        canvas.delete(dialogue)
+        # canvas.delete(dialogue)
+        canvas.itemconfig(dialogue, text="")
         place_img("move options", "spriteImages\MoveOptions\m01.png", 1, 0, HEIGHT)
         #file0: 00, file1: 01, file2: 10, file3: 11
 
@@ -142,18 +158,28 @@ def gameloop():
         y = choice[1]
         if x==0:
             if y==0:
-                move_choice = "move0"
+                canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[3].name + "!")
+                move = pikachu.moveset[3]
+
             else:
-                move_choice = "move1"
+                canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[0].name + "!")
+                move = pikachu.moveset[0]
         else:
             if y==0:
-                move_choice = "move2"
+                canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[2].name + "!")
+                move = pikachu.moveset[2]
             else:
-                move_choice = "move3"
-        next = False
+                canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[1].name + "!")
+                move = pikachu.moveset[1]
 
-        
-    
+        pikachu.use_move(pikachu2, move)
+
+        r = random.randint(0,3)
+
+        canvas.itemconfig(dialogue, text="Pikachu2 used " + pikachu2.moveset[r] + "!")
+        pikachu2.use_move(pikachu, pikachu2.moveset[r])
+
+        next = False
 
     if stage == "run":
         pass
