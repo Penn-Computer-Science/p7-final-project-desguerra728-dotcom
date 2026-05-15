@@ -22,6 +22,9 @@ choice = []
 player_pokemon = []
 
 stage = "start"
+substage = ""
+move = None
+move2 = None
 
 class Moves:
     def __init__(self, name, pp, effect, power):
@@ -37,6 +40,9 @@ class Pokemon:
         self.moveset = moveset
 
     def use_move(self, opponent, move):
+        if move == None:
+            return
+        
         move.pp -= 1
 
         # damage = ((((2*level*critical)/5)*power*a/d)/50+2)*STAB*type1*type2*rand
@@ -101,8 +107,10 @@ def choose4(img_name, index, file0, file1, file2, file3):
     choice = [x, y]
 
 def gameloop():
-    global next, choice, stage, move_item_list
+    global next, choice, stage, move_item_list, substage, move, dialogue, move2
     if stage == "start" and not next:
+        substage = ""
+        canvas.itemconfig(dialogue, text="What will Pikachu do?")
         choose4("options", 1, "spriteImages\Options\pokeOptions.png",
                 "spriteImages\Options\FightOptions.png",
                 "spriteImages\Options\RunOptions.png",
@@ -127,8 +135,7 @@ def gameloop():
     if stage == "pokemon":
         pass
 
-    if stage == "fight" and not next:
-        global dialogue, player_pokemon, move_item_list
+    if stage == "fight" and not next and substage != "aftermath":
         # name: hp, [stats], [moveset]
         # canvas.delete(dialogue)
         canvas.itemconfig(dialogue, text="")
@@ -171,15 +178,20 @@ def gameloop():
             else:
                 canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[1].name + "!")
                 move = pikachu.moveset[1]
+        substage = "aftermath"
+        move2 = pikachu2.moveset[1] #random.choice(pikachu2.moveset)
 
+
+    if substage == "aftermath" and next:
         pikachu.use_move(pikachu2, move)
+        move = None
+    
+    if substage == "aftermath" and not next:
+        canvas.itemconfig(dialogue, text="Pikachu2 used " + move2.name + "!")
+        pikachu2.use_move(pikachu, move2)
+        move2 = None
+        stage = "start"
 
-        r = random.randint(0,3)
-
-        canvas.itemconfig(dialogue, text="Pikachu2 used " + pikachu2.moveset[r] + "!")
-        pikachu2.use_move(pikachu, pikachu2.moveset[r])
-
-        next = False
 
     if stage == "run":
         pass
@@ -206,7 +218,7 @@ def up_down(event):
 
 def enter(event):
     global next
-    next = True
+    next = not next
 
 root.bind("<Left>", right_left)
 root.bind("<Right>", right_left)
