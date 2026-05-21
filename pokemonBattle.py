@@ -108,13 +108,13 @@ def choose4(img_name, index, file0, file1, file2, file3):
 
 def gameloop():
     global next, choice, stage, move_item_list, substage, move, dialogue, move2
+
     if stage == "start" and not next:
-        substage = ""
-        canvas.itemconfig(dialogue, text="What will Pikachu do?")
         choose4("options", 1, "spriteImages\Options\pokeOptions.png",
                 "spriteImages\Options\FightOptions.png",
                 "spriteImages\Options\RunOptions.png",
                 "spriteImages\Options\BagOptions.png")
+        substage = ""
         
     if next and stage == "start":
         x = choice[0]
@@ -129,38 +129,37 @@ def gameloop():
                 stage = "run"
             else:
                 stage = "bag"
-
-        next = False
     
     if stage == "pokemon":
         pass
 
-    if stage == "fight" and not next and substage != "aftermath":
-        # name: hp, [stats], [moveset]
-        # canvas.delete(dialogue)
+    if stage == "fight" and next:
         canvas.itemconfig(dialogue, text="")
         place_img("move options", "spriteImages\MoveOptions\m01.png", 1, 0, HEIGHT)
         #file0: 00, file1: 01, file2: 10, file3: 11
+        mO = canvas.create_text(300, HEIGHT-210, text=pikachu.moveset[0].name, fill = "#252527", font=("Arial", 40))
+        move_item_list.append(mO)
 
-        a=0
-        for i in range(3):
-            if i<2:
-                move_item_list.append(canvas.create_text(300+a, HEIGHT-210, text=pikachu.moveset[i].name, fill = "#252527", font=("Arial", 40)))
-                a=650
-            else:
-                move_item_list.append(canvas.create_text(300+a, HEIGHT-100, text=pikachu.moveset[i].name, fill = "#252527", font=("Arial", 40)))
-                move_item_list.append(canvas.create_text(300, HEIGHT-100, text=pikachu.moveset[i+1].name, fill = "#252527", font=("Arial", 40)))
+        mT = canvas.create_text(950, HEIGHT-210, text=pikachu.moveset[1].name, fill = "#252527", font=("Arial", 40))
+        move_item_list.append(mT)
+
+        mTh = canvas.create_text(950, HEIGHT-100, text=pikachu.moveset[2].name, fill = "#252527", font=("Arial", 40))
+        move_item_list.append(mTh)
+
+        mF = canvas.create_text(300, HEIGHT-100, text=pikachu.moveset[3].name, fill = "#252527", font=("Arial", 40))
+        move_item_list.append(mF)
 
         choose4("move options", 1, "spriteImages\MoveOptions\m00.png",
                 "spriteImages\MoveOptions\m01.png",
                 "spriteImages\MoveOptions\m10.png",
                 "spriteImages\MoveOptions\m11.png")
 
-    if stage == "fight" and next:
+    if stage == "fight" and not next:
         for item in move_item_list:
             canvas.delete(item)
-            move_item_list.remove(item)
-        canvas.delete(background_list[1])
+        move_item_list.clear()
+        if background_list:
+            canvas.delete(background_list[-1])
         x = choice[0]
         y = choice[1]
         if x==0:
@@ -178,19 +177,20 @@ def gameloop():
             else:
                 canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[1].name + "!")
                 move = pikachu.moveset[1]
-        substage = "aftermath"
         move2 = pikachu2.moveset[1] #random.choice(pikachu2.moveset)
+        substage = "aftermath"
 
 
     if substage == "aftermath" and next:
+        stage = "start"
+        next = False
+        substage = ""
         pikachu.use_move(pikachu2, move)
         move = None
-    
-    if substage == "aftermath" and not next:
-        canvas.itemconfig(dialogue, text="Pikachu2 used " + move2.name + "!")
         pikachu2.use_move(pikachu, move2)
+        if move2 != None:
+            canvas.itemconfig(dialogue, text="Pikachu2 used " + move2.name + "!")
         move2 = None
-        stage = "start"
 
 
     if stage == "run":
