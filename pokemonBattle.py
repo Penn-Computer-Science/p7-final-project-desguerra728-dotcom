@@ -27,6 +27,15 @@ move = None
 move2 = None
 d=1
 
+def max(num, numTwo):
+    if num >= numTwo:
+        return num
+    else:
+        return numTwo
+    
+def multiplier(stat_stage):
+    return (max(2, 2+stat_stage)/max(2, 2-stat_stage))
+
 class Moves:
     def __init__(self, name, pp, effect, power):
         self.name =  name
@@ -34,12 +43,15 @@ class Moves:
         self.effect = effect
         self.power = power
 
+# thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0)
+
 class Pokemon:
-    def __init__(self, name, hp, stats, moveset):
+    def __init__(self, name, hp, stats, moveset, stat_stage):
         self.name = name
         self.hp = hp
         self.stats = stats
         self.moveset = moveset
+        self.stat_stage = stat_stage
 
     def use_move(self, opponent, move):
         global next
@@ -52,6 +64,17 @@ class Pokemon:
         
         move.pp -= 1
 
+        if move.effect != None:
+            if move.effect == "neg att":
+                if opponent.stat_stage[1] > -6:
+                    opponent.stat_stage[1] -= 1
+                    opponent.stats[1] *= multiplier(opponent.stat_stage[1])
+
+            if move.effect == "neg def":
+                if opponent.stat_stage[2] > -6:
+                    opponent.stat_stage[2] -= 1
+                    opponent.stats[2] *= multiplier(opponent.stat_stage[2])
+
         # damage = ((((2*level*critical)/5)*power*a/d)/50+2)*STAB*type1*type2*rand
         rand=random.randint(217,255)
         d=opponent.stats[2]
@@ -63,12 +86,13 @@ class Pokemon:
         else:
             damage = (((2/5)*power*a/d)/50+2)*rand/225
 
-        print(opponent.stats[0])
         opponent.stats[0] -= damage
         if opponent.stats[0] <0:
             opponent.stats[0] = 0
-        print(opponent.stats[0])
 
+        print(self.name + ": " + str(self.stat_stage))
+        print(self.stats)
+        print()
 
 growl = Moves("Growl", 40, "neg att", 0)
 thundershock = Moves("Thundershock", 30, None, 40)
@@ -76,8 +100,8 @@ tail_whip = Moves("Tail Whip", 30, "neg def", 0)
 thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0)
 pikachu_moveset = [growl, thundershock, thunder_wave, tail_whip]
 
-pikachu = Pokemon("Pikachu", 35, [35, 55, 40, 50, 50, 90], pikachu_moveset)
-pikachu2 = Pokemon("Pikachu2", 35, [35, 55, 40, 50, 50, 90], pikachu_moveset)
+pikachu = Pokemon("Pikachu", 35, [35, 55, 40, 50, 50, 90], pikachu_moveset, [0,0,0,0,0,0])
+pikachu2 = Pokemon("Pikachu2", 35, [35, 55, 40, 50, 50, 90], pikachu_moveset, [0,0,0,0,0,0])
 # stats: hp attk def spattk, spdef, speed
 
 canvas = tk.Canvas(root, width = WIDTH, height = HEIGHT, bg = "white")
@@ -119,18 +143,19 @@ def choose4(img_name, index, file0, file1, file2, file3):
     choice = [x, y]
 
 def gameloop():
-    global next, choice, stage, move_item_list, substage, move, dialogue, move2, d
+    global next, choice, stage, move_item_list, substage, move, dialogue, move2, d, sec_dialogue
 
     if stage == "start" or (stage == "fight" and next):
-        canvas.move(pikachu, 0, 20*d)
-        d *= -1
+        
+        canvas.move(pikachu, 0, 10*d)
+        d = -d
 
     if stage == "start" and not next:
         canvas.tag_raise(background_list[1], background_list[0])
-        choose4("options", 1, "spriteImages\Options\pokeOptions.png",
-                "spriteImages\Options\FightOptions.png",
-                "spriteImages\Options\RunOptions.png",
-                "spriteImages\Options\BagOptions.png")
+        choose4("options", 1, "spriteImages/Options/pokeOptions.png",
+                "spriteImages/Options/FightOptions.png",
+                "spriteImages/Options/RunOptions.png",
+                "spriteImages/Options/BagOptions.png")
         substage = ""
         
     if next and stage == "start":
@@ -148,11 +173,13 @@ def gameloop():
                 stage = "bag"
     
     if stage == "pokemon":
-        pass
+        canvas.delete("all")
+        canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented", font=("Arial", 60))
 
     if stage == "fight" and next and substage != "aftermath":
+        canvas.itemconfig(sec_dialogue, text = "")
         canvas.itemconfig(dialogue, text="")
-        place_img("move options", "spriteImages\MoveOptions\m01.png", 1, 0, HEIGHT)
+        place_img("move options", "spriteImages/MoveOptions/m01.png", 1, 0, HEIGHT)
         #file0: 00, file1: 01, file2: 10, file3: 11
 
         a=0
@@ -165,10 +192,10 @@ def gameloop():
                 move_item_list.append(canvas.create_text(300+a, HEIGHT-100, text=pikachu.moveset[i].name, fill = "#252527", font=("Arial", 40)))
                 move_item_list.append(canvas.create_text(300, HEIGHT-100, text=pikachu.moveset[i+1].name, fill = "#252527", font=("Arial", 40)))
 
-        choose4("move options", 1, "spriteImages\MoveOptions\m00.png",
-                "spriteImages\MoveOptions\m01.png",
-                "spriteImages\MoveOptions\m10.png",
-                "spriteImages\MoveOptions\m11.png")
+        choose4("move options", 1, "spriteImages/MoveOptions/m00.png",
+                "spriteImages/MoveOptions/m01.png",
+                "spriteImages/MoveOptions/m10.png",
+                "spriteImages/MoveOptions/m11.png")
 
     if stage == "fight" and not next:
         for item in move_item_list:
@@ -194,12 +221,19 @@ def gameloop():
             else:
                 canvas.itemconfig(dialogue, text="Pikachu used " + pikachu.moveset[1].name + "!")
                 move = pikachu.moveset[1]
-        move2 = pikachu2.moveset[1] #random.choice(pikachu2.moveset)
+
+        if move.effect != None:
+            if move.effect == "neg att":
+                canvas.itemconfig(sec_dialogue, text="pikachu2's attack fell!")
+            if move.effect == "neg def":
+                canvas.itemconfig(sec_dialogue, text="pikachu2's def fell!")
+
+        move2 = random.choice(pikachu2.moveset)
+
         substage = "aftermath"
 
     if substage == "aftermath" and next:
-        # hp1 = canvas.create_rectangle(250, 195, 600, 225, fill = "#09963F", width=0)
-        # hp2 = canvas.create_rectangle(1430, 670, 1780, 700, fill = "#09963F", width =0)
+        canvas.itemconfig(sec_dialogue, text = "")
 
         stage = "start"
         next = False
@@ -212,27 +246,33 @@ def gameloop():
         
         if pikachu.stats[0] == 0:
             canvas.itemconfig(dialogue, text = "pikachu fainted")
-            stage = "end"
         else:
             pikachu2.use_move(pikachu, move2)
             if move2 != None:
                 canvas.itemconfig(dialogue, text="Pikachu2 used " + move2.name + "!")
+            if move2.effect != None:
+                if move2.effect == "neg att":
+                    canvas.itemconfig(sec_dialogue, text="pikachu's attack fell!")
+                if move2.effect == "neg def":
+                    canvas.itemconfig(sec_dialogue, text="pikachu's def fell!")
             move2 = None
             change = (pikachu2.hp-pikachu2.stats[0])/pikachu2.hp*350
             canvas.coords(hp2, 1430, 670, 1780-change, 700)
 
             if pikachu2.stats[0] == 0:
-                canvas.config(dialogue, text = "pikachu2 fainted")
-                stage = "end"
+                canvas.itemconfig(dialogue, text = "pikachu2 fainted")
 
     if stage == "run":
-        pass
+        canvas.delete("all")
+        canvas.create_text(400, HEIGHT-200, text="Soz dude, not implemented", font=("Arial", 60))
 
     if stage =="bag":
-        pass
+        canvas.delete("all")
+        canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented",font=("Arial", 60))
                                                                                                 
     if stage == "end":
-        pass
+        canvas.delete("all")
+        canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented",font=("Arial", 60))
 
 
     root.after(10, gameloop)
@@ -264,14 +304,14 @@ root.bind("<Down>", up_down)
 root.bind("<Return>", enter)
 root.bind("<space>", enter)
 
-spawn_sprite("pikachu", "spriteImages\pokemon\pika.png", 1, -100, HEIGHT-200)
-spawn_sprite("pikachu2", "spriteImages\pokemon\pikafront.png", 2, 1300, 400)
-place_img("dialogue bar", "spriteImages\dialogueBar.png", 1, 0, HEIGHT)
+spawn_sprite("pikachu", "spriteImages/pokemon/pika.png", 1, -100, HEIGHT-200)
+spawn_sprite("pikachu2", "spriteImages/pokemon/pikafront.png", 2, 1300, 400)
+place_img("dialogue bar", "spriteImages/dialogueBar.png", 1, 0, HEIGHT)
 place_img("options", "spriteImages/Options/options.png", 1, 0, HEIGHT)
 hp1 = canvas.create_rectangle(250, 195, 600, 225, fill = "#09963F", width=0)
 hp2 = canvas.create_rectangle(1430, 670, 1780, 700, fill = "#09963F", width =0)
 dialogue = canvas.create_text(400, HEIGHT-200, text="What will pikachu do?", fill = "#ffffff", font=("Arial", 40))
-
+sec_dialogue = canvas.create_text(400, HEIGHT-150, text="", fill = "#ffffff", font=("Arial", 40))
 print(img_dict)
 gameloop()
 root.mainloop()
