@@ -327,7 +327,11 @@ def gameloop():
     
     if stage == "end" and next:
         canvas.delete("all")
-        canvas.create_text(400, HEIGHT-200, text="You won the battle",font=("Arial", 60))
+        if pikachu.stats[0]==0:
+            canvas.create_text(400, HEIGHT-200, text="You lost the battle",font=("Arial", 60))
+        else:
+            canvas.create_text(400, HEIGHT-200, text="You won the battle",font=("Arial", 60))
+            
         return
 
 
