@@ -248,6 +248,9 @@ def gameloop():
         
         if pikachu.stats[0] == 0:
             canvas.itemconfig(dialogue, text = "pikachu fainted")
+            canvas.itemconfig(sec_dialogue, text="")
+            stage = "end"
+
         else:
             pikachu2.use_move(pikachu, move2)
             if move2 != None:
@@ -265,6 +268,8 @@ def gameloop():
 
             if pikachu2.stats[0] == 0:
                 canvas.itemconfig(dialogue, text = "pikachu2 fainted")
+                canvas.itemconfig(sec_dialogue, text="")
+                stage = "end"
 
     if stage == "run" and next:
         canvas.tag_raise(background_list[0], background_list[1])
@@ -282,9 +287,9 @@ def gameloop():
         canvas.tag_raise(hh)
         stage = "start"
     
-    if stage == "end":
+    if stage == "end" and next:
         canvas.delete("all")
-        canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented",font=("Arial", 60))
+        canvas.create_text(400, HEIGHT-200, text="You won the battle",font=("Arial", 60))
 
 
     root.after(10, gameloop)
