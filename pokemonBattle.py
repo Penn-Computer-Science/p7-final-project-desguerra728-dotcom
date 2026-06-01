@@ -27,6 +27,8 @@ move = None
 move2 = None
 white = None
 hh = None
+pp_text = None
+type = None
 
 def max(num, numTwo):
     if num >= numTwo:
@@ -38,11 +40,14 @@ def multiplier(stat_stage):
     return (max(2, 2+stat_stage)/max(2, 2-stat_stage))
 
 class Moves:
-    def __init__(self, name, pp, effect, power):
+    def __init__(self, name, pp, effect, power, type, original_pp):
         self.name =  name
         self.pp = pp
         self.effect = effect
         self.power = power
+        self.type = type
+        self.original_pp = original_pp
+
 
 # thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0)
 
@@ -95,10 +100,10 @@ class Pokemon:
         print(self.stats)
         print()
 
-growl = Moves("Growl", 40, "neg att", 0)
-thundershock = Moves("Thundershock", 30, None, 40)
-tail_whip = Moves("Tail Whip", 30, "neg def", 0)
-thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0)
+growl = Moves("Growl", 40, "neg att", 0, "Normal", 40)
+thundershock = Moves("Thundershock", 30, None, 40, "Electric", 30)
+tail_whip = Moves("Tail Whip", 30, "neg def", 0, "Normal", 20)
+thunder_wave = Moves("Thunder Wave", 20, "paralyze", 0, "Electric", 20)
 pikachu_moveset = [growl, thundershock, thunder_wave, tail_whip]
 
 pikachu = Pokemon("Pikachu", 35, [35, 55, 40, 50, 50, 90], pikachu_moveset, [0,0,0,0,0,0])
@@ -126,9 +131,38 @@ def place_img(img_name, img_file, zoom, x, y):
     bg = canvas.create_image(x, y, image = img_dict[img_name], anchor = "sw")
     background_list.append(bg)
 
+def choose4move(img_name, index, file0, file1, file2, file3):
+    #file0: 00, file1: 01, file2: 10, file3: 11
+    global choice, x, y, opp_text, pp_text, type
+    b = background_list[index]
+    if x==0:
+        if y==0:
+            make_img(img_name, file0, 1)
+            canvas.itemconfig(opp_text, text=tail_whip.original_pp)
+            canvas.itemconfig(pp_text, text=tail_whip.pp)
+            canvas.itemconfig(type, text=tail_whip.type)
+        else:
+            make_img(img_name, file1, 1)
+            canvas.itemconfig(opp_text, text=growl.original_pp)
+            canvas.itemconfig(pp_text, text=growl.pp)
+            canvas.itemconfig(type, text=growl.type)
+    else:
+        if y==0:
+            make_img(img_name, file2, 1)
+            canvas.itemconfig(opp_text, text=thunder_wave.original_pp)
+            canvas.itemconfig(pp_text, text=thunder_wave.pp)
+            canvas.itemconfig(type, text=thunder_wave.type)
+        else:
+            make_img(img_name, file3, 1)
+            canvas.itemconfig(opp_text, text=thundershock.original_pp)
+            canvas.itemconfig(pp_text, text=thundershock.pp)
+            canvas.itemconfig(type, text=thundershock.type)
+    canvas.itemconfig(b, image = img_dict[img_name])
+    choice = [x, y]
+
 def choose4(img_name, index, file0, file1, file2, file3):
     #file0: 00, file1: 01, file2: 10, file3: 11
-    global choice, x, y
+    global choice, x, y, opp_text, pp_text, type
     b = background_list[index]
     if x==0:
         if y==0:
@@ -142,9 +176,10 @@ def choose4(img_name, index, file0, file1, file2, file3):
             make_img(img_name, file3, 1)
     canvas.itemconfig(b, image = img_dict[img_name])
     choice = [x, y]
+    
 
 def gameloop():
-    global next, choice, stage, move_item_list, substage, move, dialogue, move2, sec_dialogue, white, hh
+    global next, choice, stage, move_item_list, substage, move, dialogue, move2, sec_dialogue, white, hh, pp_text, type, opp_text
 
     if stage == "start" and not next:
         canvas.itemconfig(hh, text = "")
@@ -193,12 +228,15 @@ def gameloop():
                 move_item_list.append(canvas.create_text(300+a, HEIGHT-100, text=pikachu.moveset[i].name, fill = "#252527", font=("Arial", 40)))
                 move_item_list.append(canvas.create_text(300, HEIGHT-100, text=pikachu.moveset[i+1].name, fill = "#252527", font=("Arial", 40)))
 
-        choose4("move options", 1, "spriteImages/MoveOptions/m00.png",
+        choose4move("move options", 1, "spriteImages/MoveOptions/m00.png",
                 "spriteImages/MoveOptions/m01.png",
                 "spriteImages/MoveOptions/m10.png",
                 "spriteImages/MoveOptions/m11.png")
 
     if stage == "fight" and not next:
+        canvas.itemconfig(pp_text, text = "")
+        canvas.itemconfig(opp_text, text = "")
+        canvas.itemconfig(type, text = "")
         for item in move_item_list:
             canvas.delete(item)
         move_item_list.clear()
@@ -290,6 +328,7 @@ def gameloop():
     if stage == "end" and next:
         canvas.delete("all")
         canvas.create_text(400, HEIGHT-200, text="You won the battle",font=("Arial", 60))
+        return
 
 
     root.after(10, gameloop)
@@ -332,6 +371,9 @@ hp1 = canvas.create_rectangle(250, 195, 600, 225, fill = "#09963F", width=0)
 hp2 = canvas.create_rectangle(1430, 670, 1780, 700, fill = "#09963F", width =0)
 dialogue = canvas.create_text(400, HEIGHT-200, text="What will pikachu do?", fill = "#ffffff", font=("Arial", 40))
 sec_dialogue = canvas.create_text(400, HEIGHT-150, text="", fill = "#ffffff", font=("Arial", 40))
+type =canvas.create_text(1750, 1000, text = "", fill = "black", font=("Arial", 50))
+pp_text =canvas.create_text(1650, 880, text = "", fill = "black", font=("Arial", 50))
+opp_text =canvas.create_text(1790, 880, text = "", fill = "black", font=("Arial", 50))
 print(img_dict)
 gameloop()
 root.mainloop()
