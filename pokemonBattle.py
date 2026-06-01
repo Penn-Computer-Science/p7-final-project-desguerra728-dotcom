@@ -25,7 +25,8 @@ stage = "start"
 substage = ""
 move = None
 move2 = None
-d=1
+white = None
+hh = None
 
 def max(num, numTwo):
     if num >= numTwo:
@@ -143,15 +144,13 @@ def choose4(img_name, index, file0, file1, file2, file3):
     choice = [x, y]
 
 def gameloop():
-    global next, choice, stage, move_item_list, substage, move, dialogue, move2, d, sec_dialogue
-
-    if stage == "start" or (stage == "fight" and next):
-        
-        canvas.move(pikachu, 0, 10*d)
-        d = -d
+    global next, choice, stage, move_item_list, substage, move, dialogue, move2, sec_dialogue, white, hh
 
     if stage == "start" and not next:
+        canvas.itemconfig(hh, text = "")
         canvas.tag_raise(background_list[1], background_list[0])
+        canvas.tag_lower(white)
+
         choose4("options", 1, "spriteImages/Options/pokeOptions.png",
                 "spriteImages/Options/FightOptions.png",
                 "spriteImages/Options/RunOptions.png",
@@ -173,8 +172,10 @@ def gameloop():
                 stage = "bag"
     
     if stage == "pokemon":
-        canvas.delete("all")
-        canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented", font=("Arial", 60))
+        canvas.tag_raise(white)
+        canvas.itemconfig(hh, text = "You only have pikachu")
+        canvas.tag_raise(hh)
+        stage = "start"
 
     if stage == "fight" and next and substage != "aftermath":
         canvas.itemconfig(sec_dialogue, text = "")
@@ -202,7 +203,6 @@ def gameloop():
             canvas.delete(item)
         move_item_list.clear()
         if background_list:
-            # canvas.delete(background_list[1])
             canvas.tag_raise(background_list[0], background_list[1])
         x = choice[0]
         y = choice[1]
@@ -227,6 +227,8 @@ def gameloop():
                 canvas.itemconfig(sec_dialogue, text="pikachu2's attack fell!")
             if move.effect == "neg def":
                 canvas.itemconfig(sec_dialogue, text="pikachu2's def fell!")
+            if move.effect == "paralyze":
+                canvas.itemconfig(sec_dialogue, text="Nothing happened!")
 
         move2 = random.choice(pikachu2.moveset)
 
@@ -250,11 +252,13 @@ def gameloop():
             pikachu2.use_move(pikachu, move2)
             if move2 != None:
                 canvas.itemconfig(dialogue, text="Pikachu2 used " + move2.name + "!")
-            if move2.effect != None:
-                if move2.effect == "neg att":
-                    canvas.itemconfig(sec_dialogue, text="pikachu's attack fell!")
-                if move2.effect == "neg def":
-                    canvas.itemconfig(sec_dialogue, text="pikachu's def fell!")
+                if move2.effect != None:
+                    if move2.effect == "neg att":
+                        canvas.itemconfig(sec_dialogue, text="pikachu's attack fell!")
+                    if move2.effect == "neg def":
+                        canvas.itemconfig(sec_dialogue, text="pikachu's def fell!")
+                    if move2.effect == "paralyze":
+                        canvas.itemconfig(sec_dialogue, tex= "Nothing happened!")
             move2 = None
             change = (pikachu2.hp-pikachu2.stats[0])/pikachu2.hp*350
             canvas.coords(hp2, 1430, 670, 1780-change, 700)
@@ -262,14 +266,22 @@ def gameloop():
             if pikachu2.stats[0] == 0:
                 canvas.itemconfig(dialogue, text = "pikachu2 fainted")
 
-    if stage == "run":
-        canvas.delete("all")
-        canvas.create_text(400, HEIGHT-200, text="Soz dude, not implemented", font=("Arial", 60))
+    if stage == "run" and next:
+        canvas.tag_raise(background_list[0], background_list[1])
+        canvas.itemconfig(dialogue, text="Pikachu can't escape!")
+        canvas.itemconfig(sec_dialogue, text="")
+        move2 = random.choice(pikachu2.moveset)
+        
+    if stage == "run" and not next:
+        substage = "aftermath"
+        next = True
 
-    if stage =="bag":
-        canvas.delete("all")
-        canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented",font=("Arial", 60))
-                                                                                                
+    if stage == "bag" and next:
+        canvas.tag_raise(white)
+        canvas.itemconfig(hh, text = "Your bag is empty.")
+        canvas.tag_raise(hh)
+        stage = "start"
+    
     if stage == "end":
         canvas.delete("all")
         canvas.create_text(400, HEIGHT-200, text="Sorry, not implemented",font=("Arial", 60))
@@ -304,6 +316,9 @@ root.bind("<Down>", up_down)
 root.bind("<Return>", enter)
 root.bind("<space>", enter)
 
+
+white=canvas.create_rectangle(0,0,WIDTH, HEIGHT, fill="white")
+hh=canvas.create_text(200, 200, text="",font=("Arial", 30))
 spawn_sprite("pikachu", "spriteImages/pokemon/pika.png", 1, -100, HEIGHT-200)
 spawn_sprite("pikachu2", "spriteImages/pokemon/pikafront.png", 2, 1300, 400)
 place_img("dialogue bar", "spriteImages/dialogueBar.png", 1, 0, HEIGHT)
