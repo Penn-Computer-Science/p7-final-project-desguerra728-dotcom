@@ -29,6 +29,7 @@ white = None
 hh = None
 pp_text = None
 type = None
+count = 0
 
 def max(num, numTwo):
     if num >= numTwo:
@@ -179,7 +180,20 @@ def choose4(img_name, index, file0, file1, file2, file3):
     
 
 def gameloop():
-    global next, choice, stage, move_item_list, substage, move, dialogue, move2, sec_dialogue, white, hh, pp_text, type, opp_text
+    global next, choice, stage, move_item_list, substage, move, dialogue, move2, sec_dialogue, white, hh, pp_text, type, opp_text, count
+    count+=1
+    if substage != "aftermath":
+        if count%2==0:
+            canvas.move(p_item_list[0], 0, -5)
+        else:
+            canvas.move(p_item_list[0], 0, 5)
+
+    if substage == "aftermath":
+        if count%2==0:
+            canvas.move(p_item_list[1], 0, -5)
+        else:
+            canvas.move(p_item_list[1], 0, 5)
+
 
     if stage == "start" and not next:
         canvas.itemconfig(hh, text = "")
